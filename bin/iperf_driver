@@ -22,30 +22,15 @@ Other options:
 
 import logging
 import time
-import zmq.green as zmq
+import zmq
 import random
 import sys
-import gevent
-from gevent.queue import Queue
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
-receivedMsgs = Queue()
-
-def receive_msg(socket):
-     while True:
-            msg = socket.recv()
-            log = logging.getLogger('iperf_driver.main')
-            log.debug("iperf driver recived msg: {0}".format(msg))
-            receivedMsgs.put(msg)
-
-def send_msg(socket, msg):
-    log = logging.getLogger('iperf_driver.main')
-    log.debug("iperf driver sends response")
-    socket.send(msg)
 
 def start_server():
     log = logging.getLogger('iperf_driver.main')
@@ -59,22 +44,26 @@ def start_client():
     response = "!!START_CLIENT OK!!"
     return response
 
+
 def process_msg(socket):
      while True:
-        msg = receivedMsgs.get()
-        log = logging.getLogger('iperf_driver.main')
-        log.debug("iperf driver process msg".format(msg))
+            msg = socket.recv()
+            log = logging.getLogger('iperf_driver.main')
+            log.debug("iperf driver recived msg: {0}".format(msg))
 
-        #TODO: get msg type
-        response = None
-        msgType = msg
-        if msgType == "START_SERVER":
-            response = start_server()
-        elif msgType == "START_CLIENT":
-            response = start_client()
+            log.debug("iperf driver process msg".format(msg))
 
-        if response:
-            send_msg(socket, response)
+            #TODO: get msg type
+            response = None
+            msgType = msg
+            if msgType == "START_SERVER":
+                response = start_server()
+            elif msgType == "START_CLIENT":
+                response = start_client()
+
+            if response:
+                log.debug("iperf driver sends response")
+                socket.send(response)
 
 
 def main(args):
@@ -90,10 +79,7 @@ def main(args):
     socket.connect("tcp://localhost:%s" % port)
 
     try:
-        gevent.joinall([
-            gevent.spawn(receive_msg, socket),
-            gevent.spawn(process_msg, socket),
-        ])
+        process_msg(socket),
     except KeyboardInterrupt:
         print "iperf_driver exits"
 
