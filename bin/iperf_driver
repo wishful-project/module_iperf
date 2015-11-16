@@ -81,7 +81,7 @@ def main(args):
     try:
         process_msg(socket),
     except KeyboardInterrupt:
-        print "iperf_driver exits"
+        log.debug("iperf_driver exits")
 
 
 if __name__ == "__main__":
