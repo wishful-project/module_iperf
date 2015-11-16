@@ -22,7 +22,7 @@ Other options:
 
 import logging
 import time
-import zmq
+import zmq.green as zmq
 import random
 import sys
 import gevent
@@ -38,36 +38,43 @@ receivedMsgs = Queue()
 def receive_msg(socket):
      while True:
             msg = socket.recv()
-            print ("iperf driver recived msg: %s" % msg)
+            log = logging.getLogger('iperf_driver.main')
+            log.debug("iperf driver recived msg: {0}".format(msg))
             receivedMsgs.put(msg)
-            gevent.sleep(0)
 
 def send_msg(socket, msg):
-    print('iperf driver sends answer')
+    log = logging.getLogger('iperf_driver.main')
+    log.debug("iperf driver sends response")
     socket.send(msg)
 
 def start_server():
-    print "iperf driver starts server"
+    log = logging.getLogger('iperf_driver.main')
+    log.debug("iperf driver starts server")
+    response = "!!START_SERVER OK!!"
+    return response
 
 def start_client():
-    print "iperf driver starts client"
+    log = logging.getLogger('iperf_driver.main')
+    log.debug("iperf driver starts client")
+    response = "!!START_CLIENT OK!!"
+    return response
 
 def process_msg(socket):
      while True:
         msg = receivedMsgs.get()
-        print('iperf driver process msg: %s' % msg)
+        log = logging.getLogger('iperf_driver.main')
+        log.debug("iperf driver process msg".format(msg))
 
         #TODO: get msg type
-        msgType = 1;
+        response = None
+        msgType = msg
         if msgType == "START_SERVER":
-            start_server()
+            response = start_server()
         elif msgType == "START_CLIENT":
-            start_client()
-        else:
-            response = "Msg from iperf_driver"
-            send_msg(socket, response)
+            response = start_client()
 
-        gevent.sleep(0)
+        if response:
+            send_msg(socket, response)
 
 
 def main(args):
