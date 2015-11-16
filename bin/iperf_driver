@@ -35,19 +35,40 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
 receivedMsgs = Queue()
 
-def receiveMsg(socket):
+def receive_msg(socket):
      while True:
             msg = socket.recv()
             print ("iperf driver recived msg: %s" % msg)
             receivedMsgs.put(msg)
             gevent.sleep(0)
 
-def processMsg(socket):
-    while not receivedMsgs.empty():
+def send_msg(socket, msg):
+    print('iperf driver sends answer')
+    socket.send(msg)
+
+def start_server():
+    print "iperf driver starts server"
+
+def start_client():
+    print "iperf driver starts client"
+
+def process_msg(socket):
+     while True:
         msg = receivedMsgs.get()
-        print('iperf process msg %s and sends answer' % msg)
-        socket.send("Msg from iperf_driver")
+        print('iperf driver process msg: %s' % msg)
+
+        #TODO: get msg type
+        msgType = 1;
+        if msgType == "START_SERVER":
+            start_server()
+        elif msgType == "START_CLIENT":
+            start_client()
+        else:
+            response = "Msg from iperf_driver"
+            send_msg(socket, response)
+
         gevent.sleep(0)
+
 
 def main(args):
     log = logging.getLogger('iperf_driver.main')
@@ -63,8 +84,8 @@ def main(args):
 
     try:
         gevent.joinall([
-            gevent.spawn(receiveMsg, socket),
-            gevent.spawn(processMsg, socket),
+            gevent.spawn(receive_msg, socket),
+            gevent.spawn(process_msg, socket),
         ])
     except KeyboardInterrupt:
         print "iperf_driver exits"
