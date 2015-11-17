@@ -35,35 +35,40 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 def start_server():
     log = logging.getLogger('iperf_driver.main')
     log.debug("iperf driver starts server")
+
+    group = ""
     msgType = "IPERF_RESPONSE"
     msg = "START_SERVER_OK"
-    response = [msgType, msg]
-    return response
+    msgContainer = [group, msgType, msg]
+
+    return msgContainer
 
 def start_client():
     log = logging.getLogger('iperf_driver.main')
     log.debug("iperf driver starts client")
+
+    group = ""
     msgType = "IPERF_RESPONSE"
     msg = "START_CLIENT_OK"
-    response = [msgType, msg]
-    return response
+    msgContainer = [group, msgType, msg]
+
+    return msgContainer
 
 
 def process_msg(socket):
      while True:
-            msg = socket.recv_multipart()
-            msgType = ""
-            if len(msg) > 1:
-                msgType = msg[0]
-                msg = msg[1]
-            else:
-                msg = msg[0]
+            msgContainer = socket.recv_multipart()
+
+            assert len(msgContainer) == 3
+            group = msgContainer[0]
+            msgType = msgContainer[1]
+            msg = msgContainer[2]
+
             log = logging.getLogger('iperf_driver.main')
             log.debug("iperf driver recived msg: {0}::{1}".format(msgType, msg))
 
             log.debug("iperf driver process msg: {0}::{1}".format(msgType, msg))
 
-            #TODO: get msg type
             response = None
             command = msg
             if command == "START_SERVER":
