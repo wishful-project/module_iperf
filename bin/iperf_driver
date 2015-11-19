@@ -25,6 +25,8 @@ import time
 import zmq
 import random
 import sys
+import wishful_upis.msgs.management_pb2 as msgMgmt
+from wishful_upis.msgs.msg_helper import get_msg_type
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
@@ -37,9 +39,10 @@ def start_server():
     log.debug("iperf driver starts server")
 
     group = ""
-    msgType = "IPERF_RESPONSE"
+    msgDesc = msgMgmt.MsgDesc()
+    msgDesc.msg_type = "IPERF_RESPONSE"
     msg = "START_SERVER_OK"
-    msgContainer = [group, msgType, msg]
+    msgContainer = [group, msgDesc.SerializeToString(), msg]
 
     return msgContainer
 
@@ -48,9 +51,10 @@ def start_client():
     log.debug("iperf driver starts client")
 
     group = ""
-    msgType = "IPERF_RESPONSE"
+    msgDesc = msgMgmt.MsgDesc()
+    msgDesc.msg_type = "IPERF_RESPONSE"
     msg = "START_CLIENT_OK"
-    msgContainer = [group, msgType, msg]
+    msgContainer = [group, msgDesc.SerializeToString(), msg]
 
     return msgContainer
 
@@ -61,13 +65,14 @@ def process_msg(socket):
 
             assert len(msgContainer) == 3
             group = msgContainer[0]
-            msgType = msgContainer[1]
+            msgDesc = msgMgmt.MsgDesc()
+            msgDesc.ParseFromString(msgContainer[1])
             msg = msgContainer[2]
 
             log = logging.getLogger('iperf_driver.main')
-            log.debug("iperf driver recived msg: {0}::{1}".format(msgType, msg))
+            log.debug("iperf driver recived msg: {0}::{1}".format(msgDesc.msg_type, msg))
 
-            log.debug("iperf driver process msg: {0}::{1}".format(msgType, msg))
+            log.debug("iperf driver process msg: {0}::{1}".format(msgDesc.msg_type, msg))
 
             response = None
             command = msg
