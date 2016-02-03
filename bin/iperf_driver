@@ -76,9 +76,9 @@ def process_msg(socket):
 
             response = None
             command = msg
-            if command == "START_SERVER":
+            if command == "start_server":
                 response = start_server()
-            elif command == "START_CLIENT":
+            elif command == "start_client":
                 response = start_client()
 
             if response:
