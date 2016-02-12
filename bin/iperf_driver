@@ -25,8 +25,7 @@ import time
 import zmq
 import random
 import sys
-import wishful_controller.msgs.management_pb2 as msgMgmt
-from wishful_controller.msgs.msg_helper import get_msg_type
+import wishful_framework as msgs
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
@@ -39,10 +38,11 @@ def start_server():
     log.debug("iperf driver starts server")
 
     group = ""
-    msgDesc = msgMgmt.MsgDesc()
-    msgDesc.msg_type = "IPERF_RESPONSE"
+    cmdDesc = msgs.CmdDesc()
+    cmdDesc.type = "net"
+    cmdDesc.func_name = "start_server"
     msg = "START_SERVER_OK"
-    msgContainer = [group, msgDesc.SerializeToString(), msg]
+    msgContainer = [group, cmdDesc.SerializeToString(), msg]
 
     return msgContainer
 
@@ -51,10 +51,11 @@ def start_client():
     log.debug("iperf driver starts client")
 
     group = ""
-    msgDesc = msgMgmt.MsgDesc()
-    msgDesc.msg_type = "IPERF_RESPONSE"
+    cmdDesc = msgs.CmdDesc()
+    cmdDesc.type = "net"
+    cmdDesc.func_name = "start_client"
     msg = "START_CLIENT_OK"
-    msgContainer = [group, msgDesc.SerializeToString(), msg]
+    msgContainer = [group, cmdDesc.SerializeToString(), msg]
 
     return msgContainer
 
@@ -65,24 +66,23 @@ def process_msg(socket):
 
             assert len(msgContainer) == 3
             group = msgContainer[0]
-            msgDesc = msgMgmt.MsgDesc()
-            msgDesc.ParseFromString(msgContainer[1])
+            cmdDesc = msgs.CmdDesc()
+            cmdDesc.ParseFromString(msgContainer[1])
             msg = msgContainer[2]
 
             log = logging.getLogger('iperf_driver.main')
-            log.debug("iperf driver recived msg: {0}::{1}".format(msgDesc.msg_type, msg))
-
-            log.debug("iperf driver process msg: {0}::{1}".format(msgDesc.msg_type, msg))
+            log.debug("iperf driver recived msg: {}:{}".format(cmdDesc.type, cmdDesc.func_name))
+            log.debug("iperf driver process msg: {}:{}".format(cmdDesc.type, cmdDesc.func_name))
 
             response = None
-            command = msg
+            command = cmdDesc.func_name
             if command == "start_server":
                 response = start_server()
             elif command == "start_client":
                 response = start_client()
 
             if response:
-                log.debug("iperf driver sends response: {0}".format(response))
+                log.debug("iperf driver sends response: {}".format(response))
                 socket.send_multipart(response)
 
 
