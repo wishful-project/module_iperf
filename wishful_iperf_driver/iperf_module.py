@@ -11,9 +11,9 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
     Packet flows are generated using IPerf tool.
 '''
 @wishful_module.build_module
-class IperfModule(wishful_module.AgentUpiModule):
-    def __init__(self, agentPort=None):
-        super(IperfModule, self).__init__(agentPort)
+class IperfModule(wishful_module.AgentModule):
+    def __init__(self):
+        super(IperfModule, self).__init__()
         self.log = logging.getLogger('IperfModule.main')
 
 
