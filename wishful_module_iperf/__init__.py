@@ -1,1 +1,1 @@
-from iperf_module import *
+from .iperf_module import *
