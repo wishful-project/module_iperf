@@ -44,8 +44,7 @@ class IperfModule(wishful_module.AgentModule):
         client.server_hostname = dest_ip
         client.port = port
         client.protocol = 'tcp'
-
-        print('Connecting to {0}:{1}'.format(client.server_hostname, client.port))
+        self.log.debug('Connecting to {0}:{1}'.format(client.server_hostname, client.port))
         result = client.run()
 
         if result.error:
