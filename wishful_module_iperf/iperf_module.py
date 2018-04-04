@@ -29,14 +29,14 @@ class IperfModule(wishful_module.AgentModule):
         server = iperf3.Server()
         server.port = port
         server.verbose = False
-        while self.packetflow_sink_active:
-            server.run()
+        #while self.packetflow_sink_active:
+        server.run()
 
     @wishful_module.bind_function(upis.net.create_packetflow_sink)
     def start_server(self, port):
         self.log.debug("Starts iperf server on port {}".format(port))
         self.packetflow_sink_active = True
-        _thread.start_new_thread(self.worker, (port))
+        _thread.start_new_thread(self.worker, (port,))
         self.log.debug("Server thread is started")
         return "Server_started"
 
@@ -53,37 +53,38 @@ class IperfModule(wishful_module.AgentModule):
         client.port = port
         client.protocol = 'tcp'
         self.log.debug('Connecting to {0}:{1}'.format(client.server_hostname, client.port))
-        while self.packetflow_client_active:
-            result = client.run()
-            cmdDesc = wishful_module.CmdDesc()
-            cmdDesc.type = "net"
-            cmdDesc.func_name = "start_packetflow"
-            cmdDesc.interface = self.interface
-            cmdDesc.serialization_type = wishful_module.CmdDesc.PICKLE
-            cmdDesc.repeat_number = 0
+        # while self.packetflow_client_active:
+        result = client.run()
+        cmdDesc = wishful_module.CmdDesc()
+        cmdDesc.type = "net"
+        cmdDesc.func_name = "start_packetflow"
+        #cmdDesc.interface = self.interface
+        cmdDesc.serialization_type = wishful_module.CmdDesc.PICKLE
+        cmdDesc.repeat_number = 0
+        output = ""
+        if result.error:
+            self.log.debug('Connection failed {0}:{1}'.format(client.server_hostname, client.port))
+            output = result.error
+        else:
             output = ""
-            if result.error:
-                self.log.debug('Connection failed {0}:{1}'.format(client.server_hostname, client.port))
-                output = result.error
-            else:
-                output = ""
-                output += "Test completed: \n started at: "
-                output += str(result.time)
-                output += "\n bytes transmitted: "
-                output += str(result.bytes)
-                output += "\n jitter (ms): "
-                output += str(result.jitter_ms)
-                output += "\n avg cpu load: "
-                output += str(result.local_cpu_total)
-                output += "\nMegabits per second  (Mbps): "
-                output += str(result.Mbps)
-            self.agent.send_upstream(["controller", cmdDesc, output])
+            output += "Test completed:"
+            output += "\n MBit\s sent: "
+            output += str(result.sent_Mbps)
+            output += "\n MBit\s recv: "
+            output += str(result.received_Mbps)
+                # output += "\n jitter (ms): "
+                # output += str(result.jitter_ms)
+                # output += "\n avg cpu load: "
+                # output += str(result.local_cpu_total)
+                # output += "\nMegabits per second  (Mbps): "
+                # output += str(result.Mbps)
+        self.agent.send_upstream(["controller", cmdDesc, output])
 
     @wishful_module.bind_function(upis.net.start_packetflow)
     def start_packetflow(self, dest_ip, port):
         self.log.debug("Start iperf client.")
         self.packetflow_client_active = True
-        _thread.start_new_thread(self.worker, (port, dest_ip))
+        _thread.start_new_thread(self.client_worker, (dest_ip, port))
         self.log.debug("Started iperf client.")
         return "Client_started"
 
