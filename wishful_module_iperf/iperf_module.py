@@ -1,5 +1,7 @@
 import logging
 import iperf3
+import gevent
+import _thread
 import wishful_upis as upis
 import wishful_framework as wishful_module
 
@@ -17,16 +19,21 @@ class IperfModule(wishful_module.AgentModule):
         super(IperfModule, self).__init__()
         self.log = logging.getLogger('IperfModule.main')
 
+    def worker(self, port):
+        """thread worker function"""
+        self.log.debug("Thread is started")
+        server = iperf3.Server()
+        server.port = port
+        server.verbose = False
+        while True:
+            server.run()
 
     @wishful_module.bind_function(upis.net.create_packetflow_sink)
     def start_server(self, port):
         self.log.debug("Starts iperf server on port {}".format(port))
-        
-        server = iperf3.Server()
-        server.port = port
-        server.verbose = False
-        server.run()
-        
+        _thread.start_new_thread(self.worker,(port))
+        self.log.debug("Server thread is started")
+
         return "Server_started"
 
     @wishful_module.bind_function(upis.net.destroy_packetflow_sink)
@@ -34,7 +41,6 @@ class IperfModule(wishful_module.AgentModule):
         self.log.debug("Stops iperf server.")
 
         return "Server stops automatically after one client test"
-
 
     @wishful_module.bind_function(upis.net.start_packetflow)
     def start_packetflow(self, dest_ip, port):
