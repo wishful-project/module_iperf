@@ -67,11 +67,13 @@ class IperfModule(wishful_module.AgentModule):
             output = result.error
         else:
             output = ""
-            output += "Test completed:"
-            output += "\n MBit\s sent: "
+            output += "=====Test SUCCESS: "
+            #output += "\n MBit\s sent: "
             output += str(result.sent_Mbps)
-            output += "\n MBit\s recv: "
+            #output += "\n MBit\s recv: "
+            output += " , "
             output += str(result.received_Mbps)
+            output += "=====\n"
                 # output += "\n jitter (ms): "
                 # output += str(result.jitter_ms)
                 # output += "\n avg cpu load: "
